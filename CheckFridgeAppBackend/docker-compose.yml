@@ -1,0 +1,71 @@
+version: '3.5'
+
+services:
+    postgres:
+        container_name: prod_postgres
+        image: postgres
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-postgres}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+            PGDATA: /data/postgres
+        volumes:
+            - postgres:/data/postgres
+        ports:
+            - "5432:5432"
+        networks:
+            internal:
+                  ipv4_address: 192.168.220.10
+        restart: unless-stopped
+    php-fpm:
+        container_name: prod_php-fpm
+        build:
+            context: docker/php-fpm
+        volumes:
+            - ./:/var/www
+        environment:
+            XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
+            PHP_IDE_CONFIG: "serverName=Docker"
+        depends_on:
+            - postgres
+        networks:
+            - internal
+    nginx:
+        build:
+            context: docker/nginx
+        volumes:
+            - ./:/var/www/
+            - ./storage/app/public/:/var/www/public/storage/
+        ports:
+            - "80:80"
+        depends_on:
+            - php-fpm
+        networks:
+            - internal
+    cache:
+        image: redis:6.2-alpine
+        container_name: prod_cache
+        restart: always
+        ports:
+            - '6379:6379'
+        command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+        volumes:
+            - cache:/data
+        networks:
+            internal:
+                    ipv4_address: 192.168.220.9
+
+
+
+networks:
+    internal:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 192.168.220.0/28
+
+
+volumes:
+    postgres:
+    cache:
+        driver: local
