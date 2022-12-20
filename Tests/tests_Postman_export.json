@@ -1,0 +1,418 @@
+{
+	"info": {
+		"_postman_id": "ee0a0261-65c9-4c4f-933d-93e7415cf3c4",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24833653"
+	},
+	"item": [
+		{
+			"name": "Get CSRF TOKEN",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"CSRF GETTED\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.collectionVariables.set(\"csrf_token\", responseJson);",
+							"    console.log(pm.collectionVariables.get(\"csrf_token\"));",
+							"  // pm.expect(responseJson.age).to.eql(23);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Store Fridge",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Fridge stored\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.collectionVariables.set(\"fridge_id\", responseJson.data.id);",
+							"  pm.expect(responseJson.message).to.eql(\"Fridge created\");",
+							"  // pm.expect(responseJson.age).to.eql(23);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRF-TOKEN",
+						"value": "{{csrf_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "Fridgest",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost/fridges/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get products",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Empty Fridge\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson).to.eql([]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add product",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Tomato added\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    product_name = pm.collectionVariables.get(\"added_product_name\");",
+							"    pm.expect(responseJson.data.title).to.eql(product_name);",
+							"    pm.collectionVariables.set(\"added_product_id\", responseJson.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"added_product_name\", pm.variables.replaceIn('{{$randomCatchPhraseAdjective}}'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRF-TOKEN",
+						"value": "{{csrf_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "{{added_product_name}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check product added",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Product added OK\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  fridge_id = pm.collectionVariables.get(\"fridge_id\");",
+							"  added_product_id = pm.collectionVariables.get(\"added_product_id\");",
+							"  pm.expect(responseJson[0].pivot.fridge_id).to.eql(fridge_id);",
+							"  pm.expect(responseJson[0].pivot.product_id).to.eql(added_product_id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check cache",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Product added OK\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  fridge_id = pm.collectionVariables.get(\"fridge_id\");",
+							"  added_product_id = pm.collectionVariables.get(\"added_product_id\");",
+							"  pm.expect(responseJson[0].pivot.fridge_id).to.eql(fridge_id);",
+							"  pm.expect(responseJson[0].pivot.product_id).to.eql(added_product_id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove product",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Product added OK\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.message).to.eql(\"Product removed from fridge\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-CSRF-TOKEN",
+						"value": "{{csrf_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products/{{added_product_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products",
+						"{{added_product_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check product removed",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"pm.test(\"Empty Fridge\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  console.log(responseJson);",
+							"  pm.expect(responseJson).to.eql([]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Fridge",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Fridge deleted\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.message).to.eql(\"Fridge deleted\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-CSRF-TOKEN",
+						"value": "{{csrf_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/fridges/{{fridge_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"fridges",
+						"{{fridge_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "fridge_id",
+			"value": ""
+		},
+		{
+			"key": "added_product_id",
+			"value": ""
+		},
+		{
+			"key": "added_product_name",
+			"value": ""
+		},
+		{
+			"key": "csrf_token",
+			"value": ""
+		}
+	]
+}
