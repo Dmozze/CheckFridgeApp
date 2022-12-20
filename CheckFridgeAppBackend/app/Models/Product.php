@@ -15,6 +15,12 @@ class Product extends Model
         'title',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'pivot',
+    ];
+
     public function fridges() {
         return $this->belongsToMany(Fridge::class);
     }
